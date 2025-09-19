@@ -3,3 +3,14 @@ plugins {
 alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
 }
+
+allprojects {
+    ext {
+        compileSdkVersion = 35
+        minSdkVersion = 26
+        targetSdkVersion = 35
+        //release version
+        versionCode = 472
+        versionName = '4.7.1'
+    }
+}

@@ -2,7 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
 }
-
+def localProperties = new Properties()
+localProperties.load(rootProject.file("local.properties").newInputStream())
 android {
     namespace 'son.nt.cicd'
     compileSdk 36
@@ -11,16 +12,61 @@ android {
         applicationId "son.nt.cicd"
         minSdk 24
         targetSdk 35
-        versionCode 1
-        versionName "1.0"
+        versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+        versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
+
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            include "armeabi-v7a", "arm64-v8a"
+            universalApk true
+        }
+    }
+
+    flavorDimensions "app"
+    productFlavors {
+        tablet {
+            applicationId "son.nt.cicd_tablet"
+        }
+        full {
+            dimension "app"
+            isDefault true
+        }
+    }
+
+    signingConfigs {
+        release {
+            def ks = System.getenv("SIGNING_KEYSTORE_FILE_PATH") ?: file('Signing/hitpay_prod.jks')
+            storeFile file(ks)
+            storePassword System.getenv("SIGNING_KEYSTORE_PASSWORD") ?: localProperties["KEYSTORE_PASSWORD"]
+            keyAlias System.getenv("SIGNING_KEY_ALIAS") ?: localProperties["KEY_ALIAS"]
+            keyPassword System.getenv("SIGNING_KEY_PASSWORD") ?: localProperties["KEY_PASSWORD"]
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def flavorName = variant.flavorName ?: "noFlavor"
+            def buildType = variant.buildType.name
+            def versionCode = variant.versionCode
+            def versionName = variant.versionName
+            def date = new Date().format('yyyyMMdd_HHmm')
+
+            def abiFilter = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
+
+            def apkName = "${buildType}_${flavorName}_${abiFilter}_${versionCode}_${versionName}_${date}.apk"
+            outputFileName = apkName
         }
     }
     compileOptions {
