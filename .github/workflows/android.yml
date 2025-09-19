@@ -45,12 +45,11 @@ jobs:
 
 
     - name: Cache Gradle and wrapper
-      uses: actions/cache@v2
+      id: setup-gradle
+      uses: gradle/gradle-build-action@v2
       with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+        dependency-graph: generate-and-submit
+        cache-disabled: false
 
 
     - name: Parse version from tag
