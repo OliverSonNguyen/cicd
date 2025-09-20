@@ -114,9 +114,9 @@ jobs:
         echo "CI_VERSION_NAME:$CI_VERSION_NAME"     
         echo "CI_VERSION_CODE:$CI_VERSION_CODE" 
         
-        ./gradlew assembleRelease \
-             -PCI_VERSION_NAME="$CI_VERSION_NAME" \
-             -PCI_VERSION_CODE="$CI_VERSION_CODE"
+        ./gradlew assembleRelease
+#             -PCI_VERSION_NAME="$CI_VERSION_NAME" \
+#             -PCI_VERSION_CODE="$CI_VERSION_CODE"
         echo "all done!"
 
     - name: Collect APKs
