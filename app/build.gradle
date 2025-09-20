@@ -3,10 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.android)
 }
 def localProperties = new Properties()
-localProperties.load(rootProject.file("local.properties").newInputStream())
+def localFile = rootProject.file("local.properties")
+if (localFile.exists()) {
+    localProperties.load(localFile.newInputStream())
+}
 android {
     namespace 'son.nt.cicd'
-    compileSdk 36
+    compileSdk 35
 
     defaultConfig {
         applicationId "son.nt.cicd"
