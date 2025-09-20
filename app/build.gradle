@@ -15,8 +15,11 @@ android {
         applicationId "son.nt.cicd"
         minSdk 24
         targetSdk 35
-        versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
-        versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
+//        versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+//        versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
+
+        versionCode(System.getenv("CI_VERSION_CODE"))
+        versionName(System.getenv("CI_VERSION_NAME"))
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -34,9 +37,13 @@ android {
     productFlavors {
         tablet {
             applicationId "son.nt.cicd_tablet"
+            versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+            versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
         }
         full {
             dimension "app"
+            versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+            versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
             isDefault true
         }
     }
