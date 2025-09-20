@@ -18,7 +18,6 @@ android {
         versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
         versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
 
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     splits {
