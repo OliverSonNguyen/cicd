@@ -15,15 +15,15 @@ android {
         applicationId "son.nt.cicd"
         minSdk 24
         targetSdk 35
-//        versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
-//        versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
+        versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+        versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
 
-        versionCode(project.findProperty("CI_VERSION_CODE")?.toString()?.toInteger()
-                ?: System.getenv("CI_VERSION_CODE")?.toInteger()
-                ?: rootProject.ext.versionCode)
-        versionName(project.findProperty("CI_VERSION_NAME")?.toString()
-                ?: System.getenv("CI_VERSION_NAME")
-                ?: rootProject.ext.versionName)
+//        versionCode(project.findProperty("CI_VERSION_CODE")?.toString()?.toInteger()
+//                ?: System.getenv("CI_VERSION_CODE")?.toInteger()
+//                ?: rootProject.ext.versionCode)
+//        versionName(project.findProperty("CI_VERSION_NAME")?.toString()
+//                ?: System.getenv("CI_VERSION_NAME")
+//                ?: rootProject.ext.versionName)
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
