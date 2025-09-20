@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [tablet, full]
+        flavor: [full]
 
 
 
@@ -35,6 +35,38 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+
+    - name: Parse version from tag
+      id: version
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+          GITHUB_REF="${{ github.ref }}"
+          GITHUB_NAME="${{ github.ref_name }}"
+        
+          TAG="${GITHUB_NAME#v}"
+          echo "Processing GITHUB_REF:$GITHUB_REF GITHUB_NAME:$GITHUB_NAME tag: $TAG"
+          
+          if [[ "$TAG" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)$ ]]; then
+            VERSION_NAME="${BASH_REMATCH[1]}"
+            VERSION_CODE="${BASH_REMATCH[2]}"
+          else
+            VERSION_NAME="$TAG"
+            VERSION_CODE="1"
+          fi
+          
+          # Set both environment variables and step outputs
+          echo "CI_VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "CI_VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "version-name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version-code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          
+          echo "Version -> name=$VERSION_NAME code=$VERSION_CODE"
+          echo "Ci version -> name:$CI_VERSION_NAME code:$CI_VERSION_CODE"
+
+    - name: Check ci version
+      run: |
+        echo "Version (2nd) -> name=$VERSION_NAME code=$VERSION_CODE"
+        echo "Ci version (2nd) -> name:$CI_VERSION_NAME code:$CI_VERSION_CODE"
 
     - name: set up JDK 17
       uses: actions/setup-java@v4
@@ -51,20 +83,6 @@ jobs:
         dependency-graph: generate-and-submit
         cache-disabled: false
 
-
-    - name: Parse version from tag
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
-        TAG="${GITHUB_REF_NAME#v}"
-        if [[ "$TAG" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)$ ]]; then
-          echo "CI_VERSION_NAME=${BASH_REMATCH[1]}" >> $GITHUB_ENV
-          echo "CI_VERSION_CODE=${BASH_REMATCH[2]}" >> $GITHUB_ENV
-        else
-          echo "CI_VERSION_NAME=$TAG" >> $GITHUB_ENV
-          echo "CI_VERSION_CODE=1" >> $GITHUB_ENV
-        fi
-        echo "Version -> name=$CI_VERSION_NAME code=$CI_VERSION_CODE"   
-        
 
     - name: Run Unit Test
       run :
@@ -89,13 +107,13 @@ jobs:
         SIGNING_KEYSTORE_PASSWORD: ${{ env.SIGNING_KEYSTORE_PASSWORD }}
         SIGNING_KEY_ALIAS: ${{ env.SIGNING_KEY_ALIAS }}
         SIGNING_KEY_PASSWORD: ${{ env.SIGNING_KEY_PASSWORD }}
-        CI_VERSION_NAME: ${{ env.CI_VERSION_NAME }}
-        CI_VERSION_CODE: ${{ env.CI_VERSION_CODE }}
+#        CI_VERSION_NAME: ${{ env.CI_VERSION_NAME }}
+#        CI_VERSION_CODE: ${{ env.CI_VERSION_CODE }}
       run: |
         echo "Start build release app"
-        ./gradlew --no-daemon --stacktrace assembleRelease \
-            -PCI_VERSION_NAME="${CI_VERSION_NAME}" \
-            -PCI_VERSION_CODE="${CI_VERSION_CODE}"
+        ./gradlew --no-daemon --stacktrace --console=plain assembleRelease \
+        -PversionName="$CI_VERSION_NAME" \
+        -PversionCode="$CI_VERSION_CODE"
         echo "all done!"
 
     - name: Collect APKs

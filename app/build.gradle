@@ -18,7 +18,6 @@ android {
         versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
         versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
 
-
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     splits {
@@ -34,9 +33,13 @@ android {
     productFlavors {
         tablet {
             applicationId "son.nt.cicd_tablet"
+            versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+            versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
         }
         full {
             dimension "app"
+            versionCode(System.getenv("CI_VERSION_CODE") ?: rootProject.ext.versionCode)
+            versionName(System.getenv("CI_VERSION_NAME") ?: rootProject.ext.versionName)
             isDefault true
         }
     }
