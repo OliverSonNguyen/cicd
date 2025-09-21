@@ -3,7 +3,7 @@ name: Android Release on Tag
 on:
   push:
     tags:
-     - 'v*'
+      - 'v*'
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ env:
 
   # Keystore Alias Password
   SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-  
+
 jobs:
   build:
     name: Build APKs (${{ matrix.flavor}})
@@ -26,20 +26,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [full]
+        flavor: [ full ]
     steps:
-    - name: Checkout Branch
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Parse version from tag
-      id: version
-      if: startsWith(github.ref, 'refs/tags/')
-      run: |
+      - name: Parse version from tag
+        id: version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
           GITHUB_REF="${{ github.ref }}"
           GITHUB_NAME="${{ github.ref_name }}"
-        
+          
           TAG="${GITHUB_NAME#v}"
           echo "Processing GITHUB_REF:$GITHUB_REF GITHUB_NAME:$GITHUB_NAME tag: $TAG"
           
@@ -58,79 +58,78 @@ jobs:
           echo "version-code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "Version -> name=$VERSION_NAME code=$VERSION_CODE"
 
-    - name: set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
 
 
-    - name: Cache Gradle and wrapper
-      id: setup-gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        dependency-graph: generate-and-submit
-        cache-disabled: false
+      - name: Cache Gradle and wrapper
+        id: setup-gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          dependency-graph: generate-and-submit
+          cache-disabled: false
 
 
-    - name: Run Unit Test
-      run :
-        echo "All Unit test passed ^^!"
+      - name: Run Unit Test
+        run:
+          echo "All Unit test passed ^^!"
 
-    - name : Decode keyStore and Save it for signing
-      env:
-        ENCODED_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE }}
-      run: |
-        tmp_keystore_directory="${RUNNER_TEMP}"/keystore
-        mkdir "${tmp_keystore_directory}"
-        echo $ENCODED_KEYSTORE | base64 -d > "${tmp_keystore_directory}"/keystore.jks
-        echo "SIGNING_KEYSTORE_FILE_PATH="${tmp_keystore_directory}"/keystore.jks" >> $GITHUB_ENV
-
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Build release app
-      env:
-        SIGNING_KEYSTORE_FILE_PATH: ${{ env.SIGNING_KEYSTORE_FILE_PATH }}
-        SIGNING_KEYSTORE_PASSWORD: ${{ env.SIGNING_KEYSTORE_PASSWORD }}
-        SIGNING_KEY_ALIAS: ${{ env.SIGNING_KEY_ALIAS }}
-        SIGNING_KEY_PASSWORD: ${{ env.SIGNING_KEY_PASSWORD }}
-        CI_VERSION_NAME: ${{ env.CI_VERSION_NAME }}
-        CI_VERSION_CODE: ${{ env.CI_VERSION_CODE }}
-      run: |
-        echo "Start build release app"
-        echo "CI_VERSION_NAME:$CI_VERSION_NAME"     
-        echo "CI_VERSION_CODE:$CI_VERSION_CODE" 
-        ./gradlew --no-daemon --stacktrace --console=plain assembleRelease
-        echo "all done!"
-
-    - name: Collect APKs
-      run: |
-        echo "Listing APKs:"
-          find app/build/outputs/apk -type f -name "*.apk" -print
-        
-
-    - name: Set path to env
-      run: |
-        FULL_APK_PATH=$(find app/build/outputs/apk/full/release -name "*universal*.apk" | head -n1)
-        FULL_APK_NAME=$(basename "$FULL_APK_PATH")
-        echo "RELEASE_FULL_UNIVERSAL_PATH=$FULL_APK_PATH" >> $GITHUB_ENV
-        echo "RELEASE_FULL_UNIVERSAL=$FULL_APK_NAME" >> $GITHUB_ENV
+      - name: Decode keyStore and Save it for signing
+        env:
+          ENCODED_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE }}
+        run: |
+          tmp_keystore_directory="${RUNNER_TEMP}"/keystore
+          mkdir "${tmp_keystore_directory}"
+          echo $ENCODED_KEYSTORE | base64 -d > "${tmp_keystore_directory}"/keystore.jks
+          echo "SIGNING_KEYSTORE_FILE_PATH="${tmp_keystore_directory}"/keystore.jks" >> $GITHUB_ENV
 
 
-    - name: Upload Full apks
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.RELEASE_FULL_UNIVERSAL }}
-#        path: ${{ env.RELEASE_FULL_UNIVERSAL_PATH }}
-        path: release_full
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-    - name: Echo upload message
-      if: matrix.flavor == 'full'
-      run: |
-        echo "Uploaded Full APK to tag: ${{ github.ref_name }}"
+      - name: Build release app
+        env:
+          SIGNING_KEYSTORE_FILE_PATH: ${{ env.SIGNING_KEYSTORE_FILE_PATH }}
+          SIGNING_KEYSTORE_PASSWORD: ${{ env.SIGNING_KEYSTORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ env.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ env.SIGNING_KEY_PASSWORD }}
+          CI_VERSION_NAME: ${{ env.CI_VERSION_NAME }}
+          CI_VERSION_CODE: ${{ env.CI_VERSION_CODE }}
+        run: |
+          echo "Start build release app"
+          echo "CI_VERSION_NAME:$CI_VERSION_NAME"     
+          echo "CI_VERSION_CODE:$CI_VERSION_CODE" 
+          ./gradlew --no-daemon --stacktrace --console=plain assembleRelease
+          echo "all done!"
+
+      - name: Collect APKs
+        run: |
+          echo "Listing APKs:"
+            find app/build/outputs/apk -type f -name "*.apk" -print
+
+
+      - name: Set path to env
+        run: |
+          FULL_APK_PATH=$(find app/build/outputs/apk/full/release -name "*universal*.apk" | head -n1)
+          FULL_APK_NAME=$(basename "$FULL_APK_PATH")
+          echo "RELEASE_FULL_UNIVERSAL_PATH=$FULL_APK_PATH" >> $GITHUB_ENV
+          echo "RELEASE_FULL_UNIVERSAL=$FULL_APK_NAME" >> $GITHUB_ENV
+
+
+      - name: Upload Full apks
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.RELEASE_FULL_UNIVERSAL }}
+          path: release_full
+
+      - name: Echo upload message
+        if: matrix.flavor == 'full'
+        run: |
+          echo "Uploaded Full APK to tag: ${{ github.ref_name }}"
 
   # after your build job
   release:
@@ -152,9 +151,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           files: |
-#            dist/release_ful/${{ env.RELEASE_FULL_UNIVERSAL }}
             dist/release_ful/*_full_universal_*.apk
-#            dist/tablet-armeabi-v7a-apk/*_tablet_armeabi-v7a_*.apk
           fail_on_unmatched_files: false
 
 
