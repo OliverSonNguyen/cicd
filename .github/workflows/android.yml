@@ -110,13 +110,21 @@ jobs:
       run: |
         echo "Listing APKs:"
           find app/build/outputs/apk -type f -name "*.apk" -print
+        
+
+    - name: Set path to env
+      run: |
+        FULL_APK_PATH=$(find app/build/outputs/apk/full/release -name "*universal*.apk" | head -n1)
+        FULL_APK_NAME=$(basename "$FULL_APK_PATH")
+        echo "RELEASE_FULL_UNIVERSAL_PATH=$FULL_APK_PATH" >> $GITHUB_ENV
+        echo "RELEASE_FULL_UNIVERSAL=$FULL_APK_NAME" >> $GITHUB_ENV
+
 
     - name: Upload Full apks
-      if: matrix.flavor == 'full'
       uses: actions/upload-artifact@v4
       with:
-        name: full-universal-apk
-        path: app/build/outputs/apk/full/release/*_full_universal_*.apk
+        name: ${{ env.RELEASE_FULL_UNIVERSAL }}
+        path: ${{ env.RELEASE_FULL_UNIVERSAL_PATH }}
 
     - name: Echo upload message
       if: matrix.flavor == 'full'
@@ -140,6 +148,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           files: |
+#             dist/full-universal-apk/${{ env.RELEASE_FULL_UNIVERSAL }}
             dist/full-universal-apk/*_full_universal_*.apk
 #            dist/tablet-armeabi-v7a-apk/*_tablet_armeabi-v7a_*.apk
           fail_on_unmatched_files: true
