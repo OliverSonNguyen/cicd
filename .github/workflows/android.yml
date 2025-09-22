@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        flavor: [ full ]
+        flavor: [full]
     steps:
       - name: Checkout Branch
         uses: actions/checkout@v4
@@ -47,7 +47,9 @@ jobs:
           echo "Parsing tag: $TAG"
 
           # Run scripts to parse tag information and assign it to GITHUB_ENV
-          python3 scripts/cicd.py "$TAG" --github-action
+          # python3 scripts/cicd.py "$TAG" --github-action
+
+          python3 scripts/cicd.py "$TAG" --apk-cmd
 
       - name: Get value from python parse
         run: |
@@ -55,6 +57,7 @@ jobs:
           echo "Version code:$CI_VERSION_CODE"
           echo "Flavor:$CI_FLAVOR"
           echo "Build Type:$CI_BUILD_TYPE"
+          echo "Gradlew cmd:${CI_GRADLE_COMMAND}"
 
       - name: set up JDK 17
         uses: actions/setup-java@v4
@@ -101,7 +104,13 @@ jobs:
           echo "Start build release app"
           echo "CI_VERSION_NAME:$CI_VERSION_NAME"     
           echo "CI_VERSION_CODE:$CI_VERSION_CODE" 
-          ./gradlew --no-daemon --stacktrace --console=plain assembleRelease
+          echo "BUILD_TYPE:$CI_BUILD_TYPE"
+
+        
+
+          # ./gradlew --no-daemon --stacktrace --console=plain assembleRelease
+          $CI_GRADLE_COMMAND
+
           echo "all done!"
 
       - name: Collect APKs
@@ -117,14 +126,6 @@ jobs:
           echo "Find Apk paths tag: $TAG"
 
           python3 scripts/cicd.py "$TAG" --apk-paths
-
-
-      - name: Set path to env
-        run: |
-          FULL_APK_PATH=$(find app/build/outputs/apk/full/release -name "*universal*.apk" | head -n1)
-          FULL_APK_NAME=$(basename "$FULL_APK_PATH")
-          echo "RELEASE_FULL_UNIVERSAL_PATH=$FULL_APK_PATH" >> $GITHUB_ENV
-          echo "RELEASE_FULL_UNIVERSAL=$FULL_APK_NAME" >> $GITHUB_ENV
 
 
       - name: Upload Full apks
