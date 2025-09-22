@@ -25,8 +25,8 @@ class TagParse:
         
         self.versionName = parts[0]
         self.versionCode = int(parts[1])
-        self.flavor = parts[2]
-        self.buildType = parts[3] if len(parts) > 3 else 'full'
+        self.flavor = parts[2] if len(parts) > 2 else 'full'
+        self.buildType = parts[3] if len(parts) > 3 else 'prd'
 
 
     def getVersionName(self) -> str:
@@ -68,39 +68,7 @@ class TagParse:
 
     def findApkPaths(self, basePath = "app/build/outputs/apk"):
         print(f"Find apk path basePath:{basePath}")
-
-
-        # fullReleaseDir = f"{basePath}/full/release"
-        # allFiles = os.listdir(fullReleaseDir)
-        # print(f"All files in full release dir:{allFiles}")
-
-        # print("--------------Full-------------------")
-        # fullPattern = f"{basePath}/full/release/*universal*.apk"
-        # print(f"Find apk path fullPattern:{fullPattern}")
-        # fullMatches = glob.glob(fullPattern)
-
-        # if fullMatches:
-        #     fullApkpath = fullMatches[0]
-        #     fullApkName = os.path.basename(fullApkpath)
-        #     print(f"Found full universal path on tag:{self.tag} apk: {fullApkpath} - name:{fullApkName}")
-        # else:
-        #     print(f"Not found full universion apk on tag:{self.tag}")
-
-
-        # print("--------------Stripe-------------------")
-        # #stripe  
-        # stripePattern = f"{basePath}/apps_on_device/release/*armeabi-v7a*.apk"
-        # print(f"Find apk path stripePattern:{stripePattern}")
-        # stripeMatches = glob.glob(stripePattern)
-
-        # if stripeMatches:
-        #     stripeApkpath = stripeMatches[0]
-        #     stripeApkName = os.path.basename(stripeApkpath)
-        #     print(f"Found stripe armeabi path on tag:{self.tag} apk: {stripeApkpath} - name:{stripeApkName}")
-        # else:
-        #     print(f"Not found stripe armeabi apk on tag:{self.tag}")  
-
-
+      
         # --- Full (universal) ---
         print("--------------Full-------------------")
         fullPattern = f"{basePath}/full/release/*universal*.apk"
@@ -156,15 +124,56 @@ class TagParse:
             self._write_env("RELEASE_INGENICO_ARMEABI", ingenicoApkName)
         else:
             print(f"Not found Ingenico armeabi apk on tag:{self.tag}")    
-
-
         
 
 
+    
+    def getGradleCommand(self) -> str: 
+        print(f"Build apks tag:{self.tag}")
+        
+
+        gradleCmd = ""
+        print(f"Build apk flavor:{self.flavor} buildType:{self.buildType}")
+        
+        if self.flavor == "full":
+            gradleCmd = "assembleFullRelease"
+        elif self.flavor == "adyen":
+            gradleCmd = "assembleApps_on_deviceAdyenRelease"
+        elif self.flavor == "stripe":
+            gradleCmd = "assembleApps_on_deviceRelease"
+        elif self.flavor == "ingenico":
+            gradleCmd = "assembleApps_on_deviceIngenicoRelease"
+        elif self.flavor == "all":
+            gradleCmd = "assembleFullRelease assembleApps_on_deviceAdyenRelease assembleApps_on_deviceRelease assembleApps_on_deviceIngenicoRelease"
+        else:
+            print(f"Unknown build type: {self.buildType}, defaulting to full")
+            gradleCmd = "assembleFullRelease"
+        
+        print(f"Gradle command: {gradleCmd}")
+        return gradleCmd
+    
+    def buildApks(self): 
+        cmd = self.getGradleCommand()
+        print(f"buildApks gradleComand :{cmd}")
+
+        finalGradlew = f"./gradlew {cmd} -PversionName={self.versionName} -PversionCode={self.versionCode}"
+        print(f"buildApks finalGradlew :{finalGradlew}")
+
+    def generateGradleCmd(self): 
+
+        # self.findApkPaths() 
+        self.parseTag()
+        self.setGitHubEnv()
 
 
+        cmd = self.getGradleCommand()
+        finalGradlew = f"./gradlew --no-daemon --stacktrace --console=plain {cmd} -PversionName={self.versionName} -PversionCode={self.versionCode}"
+        print(f"generateGradleCmd finalGradlew :{finalGradlew}") 
+         
+        self._write_env("CI_GRADLE_COMMAND", finalGradlew)
 
 
+            
 
     
 
@@ -188,6 +197,12 @@ def main():
 
     if '--apk-paths' in options:
         parser.findApkPaths()    
+
+    if '--apk-build' in options:
+        parser.buildApks()   
+
+    if '--apk-cmd' in options:
+        parser.generateGradleCmd()
 
     
 
