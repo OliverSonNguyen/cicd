@@ -25,15 +25,18 @@ android {
 //                ?: System.getenv("CI_VERSION_NAME")
 //                ?: rootProject.ext.versionName)
 
-        def envVersionCode = System.getenv("CI_VERSION_CODE")
-        def envVersionName = System.getenv("CI_VERSION_NAME")
+//        def envVersionCode = System.getenv("CI_VERSION_CODE")
+//        def envVersionName = System.getenv("CI_VERSION_NAME")
 
-        versionCode(envVersionCode ? envVersionCode.toInteger() : rootProject.ext.versionCode)
-        versionName(envVersionName ?: rootProject.ext.versionName)
+
+        def propVersionCode = project.findProperty("versionCode")
+        def propVersionName = project.findProperty("versionName")
+        versionCode(propVersionCode ? propVersionCode.toInteger() : rootProject.ext.versionCode)
+        versionName(propVersionName ?: rootProject.ext.versionName)
 
         println " Environment variable debug:"
-        println "  System.getenv('CI_VERSION_CODE'): ${System.getenv('CI_VERSION_CODE')}"
-        println "  System.getenv('CI_VERSION_NAME'): ${System.getenv('CI_VERSION_NAME')}"
+        println "  propVersionCode: $propVersionCode"
+        println "  propVersionName: $propVersionName"
         println "  rootProject.ext.versionCode: ${rootProject.ext.versionCode}"
         println "  rootProject.ext.versionName: ${rootProject.ext.versionName}"
         println " Final version: ${versionName} (${versionCode})"
