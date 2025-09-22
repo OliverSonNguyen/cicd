@@ -10,7 +10,7 @@ allprojects {
         minSdkVersion = 26
         targetSdkVersion = 35
         //release version
-        versionCode = 472
-        versionName = '4.7.1'
+        versionCode = 555
+        versionName = '5.5.5'
     }
 }

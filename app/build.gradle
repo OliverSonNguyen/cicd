@@ -51,8 +51,12 @@ android {
 
     flavorDimensions "app"
     productFlavors {
-        tablet {
-            applicationId "son.nt.cicd_tablet"
+        apps_on_device {
+            applicationId "son.nt.cicdt"
+        }
+
+        apps_on_device_adyen {
+            applicationId "son.nt.cicd_adyen"
         }
         full {
             dimension "app"
@@ -84,10 +88,13 @@ android {
             def versionCode = variant.versionCode
             def versionName = variant.versionName
             def date = new Date().format('yyyyMMdd_HHmm')
+            // get current git commit short hash
+            def gitSha = "git rev-parse --short HEAD".execute().text.trim()
 
             def abiFilter = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
 
-            def apkName = "${buildType}_${flavorName}_${abiFilter}_${versionCode}_${versionName}_${date}.apk"
+            def apkName = "${buildType}_${flavorName}_${abiFilter}_${versionCode}_${versionName}_${gitSha}_${date}.apk"
+
             outputFileName = apkName
         }
     }
