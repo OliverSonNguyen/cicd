@@ -58,6 +58,11 @@ android {
         apps_on_device_adyen {
             applicationId "son.nt.cicd_adyen"
         }
+
+        apps_on_device_ingenico {
+            applicationId "son.nt.cicd_ingenico"
+        }
+
         full {
             dimension "app"
             isDefault true

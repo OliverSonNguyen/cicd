@@ -2,6 +2,7 @@ import re
 import json
 import sys
 import os
+import glob
 class TagParse:
     def __init__(self, repoTag: str):
         """Init with a git tag"""
@@ -40,6 +41,12 @@ class TagParse:
     def getBuildType(self) -> str:
         return self.buildType
     
+    def _write_env(self, key: str, val: str):
+        env_file = os.environ.get("GITHUB_ENV")
+        if env_file:
+            with open(env_file, "a") as f:
+                f.write(f"{key}={val}\n")
+    
     def setGitHubEnv(self):
         print("setGitHubEnv called")
         
@@ -58,6 +65,107 @@ class TagParse:
             print(" Not in GitHub Actions environment")
             print(f"Would set CI_VERSION_NAME={self.versionName}")
             print(f"Would set CI_VERSION_CODE={self.versionCode}")
+
+    def findApkPaths(self, basePath = "app/build/outputs/apk"):
+        print(f"Find apk path basePath:{basePath}")
+
+
+        # fullReleaseDir = f"{basePath}/full/release"
+        # allFiles = os.listdir(fullReleaseDir)
+        # print(f"All files in full release dir:{allFiles}")
+
+        # print("--------------Full-------------------")
+        # fullPattern = f"{basePath}/full/release/*universal*.apk"
+        # print(f"Find apk path fullPattern:{fullPattern}")
+        # fullMatches = glob.glob(fullPattern)
+
+        # if fullMatches:
+        #     fullApkpath = fullMatches[0]
+        #     fullApkName = os.path.basename(fullApkpath)
+        #     print(f"Found full universal path on tag:{self.tag} apk: {fullApkpath} - name:{fullApkName}")
+        # else:
+        #     print(f"Not found full universion apk on tag:{self.tag}")
+
+
+        # print("--------------Stripe-------------------")
+        # #stripe  
+        # stripePattern = f"{basePath}/apps_on_device/release/*armeabi-v7a*.apk"
+        # print(f"Find apk path stripePattern:{stripePattern}")
+        # stripeMatches = glob.glob(stripePattern)
+
+        # if stripeMatches:
+        #     stripeApkpath = stripeMatches[0]
+        #     stripeApkName = os.path.basename(stripeApkpath)
+        #     print(f"Found stripe armeabi path on tag:{self.tag} apk: {stripeApkpath} - name:{stripeApkName}")
+        # else:
+        #     print(f"Not found stripe armeabi apk on tag:{self.tag}")  
+
+
+        # --- Full (universal) ---
+        print("--------------Full-------------------")
+        fullPattern = f"{basePath}/full/release/*universal*.apk"
+        print(f"Find apk path fullPattern:{fullPattern}")
+        fullMatches = glob.glob(fullPattern)
+        if fullMatches:
+            fullApkPath = fullMatches[0]
+            fullApkName = os.path.basename(fullApkPath)
+            print(f"Found full universal apk on tag:{self.tag} apk: {fullApkPath} - name:{fullApkName}")
+            self._write_env("RELEASE_FULL_UNIVERSAL_PATH", fullApkPath)
+            self._write_env("RELEASE_FULL_UNIVERSAL", fullApkName)
+        else:
+            print(f"Not found full universal apk on tag:{self.tag}")
+
+        # --- Stripe (armeabi-v7a) ---
+        print("--------------Stripe-------------------")
+        stripePattern = f"{basePath}/apps_on_device/release/*armeabi-v7a*.apk"
+        print(f"Find apk path stripePattern:{stripePattern}")
+        stripeMatches = glob.glob(stripePattern)
+        if stripeMatches:
+            stripeApkPath = stripeMatches[0]
+            stripeApkName = os.path.basename(stripeApkPath)
+            print(f"Found Stripe armeabi apk on tag:{self.tag} apk: {stripeApkPath} - name:{stripeApkName}")
+            self._write_env("RELEASE_STRIPE_ARMEABI_PATH", stripeApkPath)
+            self._write_env("RELEASE_STRIPE_ARMEABI", stripeApkName)
+        else:
+            print(f"Not found Stripe armeabi apk on tag:{self.tag}")
+
+        # --- Adyen (universal) ---
+        print("--------------Adyen-------------------")
+        adyenPattern = f"{basePath}/apps_on_device_adyen/release/*universal*.apk"
+        print(f"Find apk path adyenPattern:{adyenPattern}")
+        adyenMatches = glob.glob(adyenPattern)
+        if adyenMatches:
+            adyenApkPath = adyenMatches[0]
+            adyenApkName = os.path.basename(adyenApkPath)
+            print(f"Found Adyen universal apk on tag:{self.tag} apk: {adyenApkPath} - name:{adyenApkName}")
+            self._write_env("RELEASE_ADYEN_UNIVERSAL_PATH", adyenApkPath)
+            self._write_env("RELEASE_ADYEN_UNIVERSAL", adyenApkName)
+        else:
+            print(f"Not found Adyen universal apk on tag:{self.tag}")
+
+        # --- Ingenico (armeabi-v7a) ---
+        print("--------------Ingenico-------------------")
+        ingenicoPattern = f"{basePath}/apps_on_device_ingenico/release/*armeabi-v7a*.apk"
+        print(f"Find apk path ingenicoPattern:{ingenicoPattern}")
+        ingenicoMatches = glob.glob(ingenicoPattern)
+        if ingenicoMatches:
+            ingenicoApkPath = ingenicoMatches[0]
+            ingenicoApkName = os.path.basename(ingenicoApkPath)
+            print(f"Found Ingenico armeabi apk on tag:{self.tag} apk: {ingenicoApkPath} - name:{ingenicoApkName}")
+            self._write_env("RELEASE_INGENICO_ARMEABI_PATH", ingenicoApkPath)
+            self._write_env("RELEASE_INGENICO_ARMEABI", ingenicoApkName)
+        else:
+            print(f"Not found Ingenico armeabi apk on tag:{self.tag}")    
+
+
+        
+
+
+
+
+
+
+
     
 
 def main():
@@ -77,6 +185,9 @@ def main():
 
     if '--github-action' in options:
         parser.setGitHubEnv()
+
+    if '--apk-paths' in options:
+        parser.findApkPaths()    
 
     
 
