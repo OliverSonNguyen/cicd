@@ -138,13 +138,13 @@ class TagParse:
         if self.flavor == "full":
             gradleCmd = "assembleFullRelease"
         elif self.flavor == "adyen":
-            gradleCmd = "assembleApps_on_deviceAdyenRelease"
+            gradleCmd = "assembleApps_on_device_adyenRelease"
         elif self.flavor == "stripe":
             gradleCmd = "assembleApps_on_deviceRelease"
         elif self.flavor == "ingenico":
-            gradleCmd = "assembleApps_on_deviceIngenicoRelease"
+            gradleCmd = "assembleApps_on_device_ingenicoRelease"
         elif self.flavor == "all":
-            gradleCmd = "assembleFullRelease assembleApps_on_deviceAdyenRelease assembleApps_on_deviceRelease assembleApps_on_deviceIngenicoRelease"
+            gradleCmd = "assembleFullRelease assembleApps_on_device_adyenRelease assembleApps_on_deviceRelease assembleApps_on_device_ingenicoRelease"
         else:
             print(f"Unknown build type: {self.buildType}, defaulting to full")
             gradleCmd = "assembleFullRelease"
