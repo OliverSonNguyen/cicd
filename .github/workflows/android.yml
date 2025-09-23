@@ -166,6 +166,11 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
+      - name: Checkout Branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -173,6 +178,16 @@ jobs:
 
       - name: Show what was downloaded (debug)
         run: ls -R dist || true
+
+    
+
+      - name: Get apks downloaded location
+        run: |
+          GITHUB_NAME="${{ github.ref_name }}"
+          TAG="${GITHUB_NAME#v}"
+          echo "Get apks downloaded location TAG:$TAG"
+
+          python3 scripts/cicd.py "$TAG" --apk-downloaded   
 
       - name: Publish APKs to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -190,6 +205,45 @@ jobs:
           files: |
             dist/**/*.apk
           fail_on_unmatched_files: false
+      
+      - name: Deplay to Google Play If needed
+        if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH != '' && env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH != null
+        run: |
+          echo "Deplay to Google Play If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"
+          echo "Download path:${{ env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH }}"
+
+      - name: Deplay to Stripe If needed
+        if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_STRIPE_PATH != '' && env.DOWNLOAD_RELEASE_STRIPE_PATH != null
+        run: |
+          echo "Deplay to Stripe If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"
+          echo "Download path:${{ env.DOWNLOAD_RELEASE_STRIPE_PATH }}"
+          
+      - name: Deplay to Adyen If needed
+        if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH != '' && env.DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH != null
+        run: |
+          echo "Deplay to Adyen If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"    
+          echo "Download path:${{ env.DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH }}"
+
+      - name: Deplay to Ingenico If needed
+        if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_INGENICO_PATH != '' && env.DOWNLOAD_RELEASE_INGENICO_PATH != null
+        run: |
+          echo "Deplay to Ingenico If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }} - NOT SUPPORT YET!"    
+          echo "Download path:${{ env.DOWNLOAD_RELEASE_INGENICO_PATH }}" 
+
+
+    
+  # deploy-google-play:
+  #   name: deploy-google-play
+  #   needs: [build]
+  #   runs-on: ubuntu-latest
+  #   if: env.CI_SHOULD_SUBMIT == 'true' && env.RELEASE_FULL_UNIVERSAL_PATH != '' && env.RELEASE_FULL_UNIVERSAL_PATH != null
+  #   steps:
+  #     - name: Prepare
+  #       run: |
+  #         echo "Prepare deploy-google-play "
+
+
+
 
 
 

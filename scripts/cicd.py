@@ -27,6 +27,8 @@ class TagParse:
         self.versionCode = int(parts[1])
         self.flavor = parts[2] if len(parts) > 2 else 'full'
         self.buildType = parts[3] if len(parts) > 3 else 'prd'
+        submitCmd = parts[4] if len(parts) > 4 else None
+        self.shouldSubmit = self.shouldPushToStore(submitCmd=submitCmd)
 
 
     def getVersionName(self) -> str:
@@ -40,6 +42,22 @@ class TagParse:
     
     def getBuildType(self) -> str:
         return self.buildType
+    
+    def getShouldSubmit(self) -> bool:
+        return self.shouldSubmit
+    
+    def shouldPushToStore(self, submitCmd : str) -> bool:
+        if self.flavor == "all":
+         return False
+        if submitCmd == None:
+            return False
+        if submitCmd.__contains__("false"):
+            return False
+        if submitCmd.__contains__("submit=true"):
+            return True
+        else:
+            return False
+        
     
     def _write_env(self, key: str, val: str):
         env_file = os.environ.get("GITHUB_ENV")
@@ -60,6 +78,7 @@ class TagParse:
                 f.write(f"CI_VERSION_CODE={self.versionCode}\n")
                 f.write(f"CI_FLAVOR={self.flavor}\n")
                 f.write(f"CI_BUILD_TYPE={self.buildType}\n")
+                f.write(f"CI_SHOULD_SUBMIT={self.shouldSubmit}\n")
             print("GitHub environment variables set")
         else:
             print(" Not in GitHub Actions environment")
@@ -68,7 +87,11 @@ class TagParse:
 
     def findApkPaths(self, basePath = "app/build/outputs/apk"):
         print(f"Find apk path basePath:{basePath}")
-      
+        self.setupTag()
+        self.findApksGeneratedAndSetupEnv(basePath=basePath)
+        
+
+    def findApksGeneratedAndSetupEnv(self, basePath = "app/build/outputs/apk"):
         # --- Full (universal) ---
         print("--------------Full-------------------")
         fullPattern = f"{basePath}/full/release/*universal*.apk"
@@ -124,7 +147,6 @@ class TagParse:
             self._write_env("RELEASE_INGENICO_ARMEABI", ingenicoApkName)
         else:
             print(f"Not found Ingenico armeabi apk on tag:{self.tag}")    
-        
 
 
     
@@ -162,21 +184,94 @@ class TagParse:
     def generateGradleCmd(self): 
 
         # self.findApkPaths() 
-        self.parseTag()
-        self.setGitHubEnv()
-
-
+        self.setupTag()
         cmd = self.getGradleCommand()
         finalGradlew = f"./gradlew --no-daemon --stacktrace --console=plain {cmd} -PversionName={self.versionName} -PversionCode={self.versionCode}"
         print(f"generateGradleCmd finalGradlew :{finalGradlew}") 
          
         self._write_env("CI_GRADLE_COMMAND", finalGradlew)
 
+    def apkDownloaded(self, basePath="dist"):
+        self.setupTag()
+
+
+        print("Find download apks from dist")
+        
+        # --- Full (universal) ---
+        print("--------------Full-------------------")
+        fullPattern = f"{basePath}/*full*/*universal*.apk"
+        print(f"Find download apk path fullPattern: {fullPattern}")
+        fullMatches = glob.glob(fullPattern)
+        
+        if fullMatches:
+            fullApkPath = fullMatches[0]
+            fullApkName = os.path.basename(fullApkPath)
+            print(f"Found download full universal apk on tag: {self.tag} apk: {fullApkPath} - name: {fullApkName}")
+            self._write_env("DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH", fullApkPath)
+            self._write_env("DOWNLOAD_RELEASE_FULL_UNIVERSAL", fullApkName)  # Fixed typo
+        else:
+            print(f"Not found download full universal apk on tag: {self.tag}")
+
+        # --- Adyen (universal) ---
+        print("--------------Adyen-------------------")
+        adyenPattern = f"{basePath}/*adyen*/*universal*.apk"
+        print(f"Find download apk path adyenPattern: {adyenPattern}")
+        adyenMatches = glob.glob(adyenPattern)
+        
+        if adyenMatches:
+            adyenApkPath = adyenMatches[0]
+            adyenApkName = os.path.basename(adyenApkPath)
+            print(f"Found download adyen universal apk on tag: {self.tag} apk: {adyenApkPath} - name: {adyenApkName}")
+            self._write_env("DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH", adyenApkPath)
+            self._write_env("DOWNLOAD_RELEASE_ADYEN_UNIVERSAL", adyenApkName)
+        else:
+            print(f"Not found download adyen universal apk on tag: {self.tag}")
+
+        # --- Stripe (ARM7) ---
+        print("--------------Stripe-------------------")
+        stripePattern = f"{basePath}/*stripe*/*armeabi-v7a*.apk"
+        print(f"Find download apk path stripePattern: {stripePattern}")
+        stripeMatches = glob.glob(stripePattern)
+        
+        if stripeMatches:
+            stripeApkPath = stripeMatches[0]
+            stripeApkName = os.path.basename(stripeApkPath)
+            print(f"Found download stripe universal apk on tag: {self.tag} apk: {stripeApkPath} - name: {stripeApkName}")
+            self._write_env("DOWNLOAD_RELEASE_STRIPE_PATH", stripeApkPath)
+            self._write_env("DOWNLOAD_RELEASE_STRIPE", stripeApkName)
+        else:
+            print(f"Not found download stripe universal apk on tag: {self.tag}")
+
+        # --- Ingenico (ARM7) ---
+        print("--------------Ingenico-------------------")
+        ingenicoPattern = f"{basePath}/*ingenico*/*armeabi-v7a*.apk"
+        print(f"Find download apk path ingenicoPattern: {ingenicoPattern}")
+        ingenicoMatches = glob.glob(ingenicoPattern)
+        
+        if ingenicoMatches:
+            ingenicoApkPath = ingenicoMatches[0]
+            ingenicoApkName = os.path.basename(ingenicoApkPath)
+            print(f"Found download ingenico ARM7 apk on tag: {self.tag} apk: {ingenicoApkPath} - name: {ingenicoApkName}")
+            self._write_env("DOWNLOAD_RELEASE_INGENICO_PATH", ingenicoApkPath)
+            self._write_env("DOWNLOAD_RELEASE_INGENICO", ingenicoApkName)
+        else:
+            print(f"Not found download ingenico ARM7 apk on tag: {self.tag}")
+
+
+
+
+
+    def setupTag(self): 
+        # self.parseTag()
+        self.setGitHubEnv()    
+
+
+
 
             
 
     
-
+#python3 scripts/cicd.py v5.5.5-555-adyen-prd-submit=true --apk-paths
 def main():
     if len(sys.argv) < 2:
         print("Usage: python3 cicd.py <tag>")
@@ -190,6 +285,7 @@ def main():
     print(f"versionCode={parser.getVersionCode()}")     
     print(f"flavor={parser.getFlavor()}")     
     print(f"buildType={parser.getBuildType()}")
+    print(f"shouldSubmit={parser.getShouldSubmit()}")
     print(f"Options:{options}")
 
     if '--github-action' in options:
@@ -203,6 +299,8 @@ def main():
 
     if '--apk-cmd' in options:
         parser.generateGradleCmd()
+    if '--apk-downloaded' in options:
+        parser.apkDownloaded()    
 
     
 
