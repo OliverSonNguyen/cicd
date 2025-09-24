@@ -26,7 +26,7 @@ class TagParse:
         self.versionName = parts[0]
         self.versionCode = int(parts[1])
         self.flavor = parts[2] if len(parts) > 2 else 'full'
-        self.buildType = parts[3] if len(parts) > 3 else 'prd'
+        self.environment = parts[3] if len(parts) > 3 else 'stg'
         submitCmd = parts[4] if len(parts) > 4 else None
         self.shouldSubmit = self.shouldPushToStore(submitCmd=submitCmd)
 
@@ -40,8 +40,8 @@ class TagParse:
     def getFlavor(self) -> str:
         return self.flavor
     
-    def getBuildType(self) -> str:
-        return self.buildType
+    def getEnvironment(self) -> str:
+        return self.environment
     
     def getShouldSubmit(self) -> bool:
         return self.shouldSubmit
@@ -77,7 +77,7 @@ class TagParse:
                 f.write(f"CI_VERSION_NAME={self.versionName}\n")
                 f.write(f"CI_VERSION_CODE={self.versionCode}\n")
                 f.write(f"CI_FLAVOR={self.flavor}\n")
-                f.write(f"CI_BUILD_TYPE={self.buildType}\n")
+                f.write(f"CI_ENVIRONMENT={self.environment}\n")
                 f.write(f"CI_SHOULD_SUBMIT={self.shouldSubmit}\n")
             print("GitHub environment variables set")
         else:
@@ -155,7 +155,7 @@ class TagParse:
         
 
         gradleCmd = ""
-        print(f"Build apk flavor:{self.flavor} buildType:{self.buildType}")
+        print(f"Build apk flavor:{self.flavor} environment:{self.environment}")
         
         if self.flavor == "full":
             gradleCmd = "assembleFullRelease"
@@ -168,7 +168,7 @@ class TagParse:
         elif self.flavor == "all":
             gradleCmd = "assembleFullRelease assembleApps_on_device_adyenRelease assembleApps_on_deviceRelease assembleApps_on_device_ingenicoRelease"
         else:
-            print(f"Unknown build type: {self.buildType}, defaulting to full")
+            print(f"Unknown build flavor: {self.flavor}, defaulting to full")
             gradleCmd = "assembleFullRelease"
         
         print(f"Gradle command: {gradleCmd}")
@@ -284,7 +284,7 @@ def main():
     print(f"versionName={parser.getVersionName()}")
     print(f"versionCode={parser.getVersionCode()}")     
     print(f"flavor={parser.getFlavor()}")     
-    print(f"buildType={parser.getBuildType()}")
+    print(f"environment={parser.getEnvironment()}")
     print(f"shouldSubmit={parser.getShouldSubmit()}")
     print(f"Options:{options}")
 

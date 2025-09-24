@@ -83,7 +83,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField "String", "BASE_URL", "\"https://api.staging.hit-pay.com\""
+        }
         release {
+            def baseUrl = System.getenv("BASE_URL") ?: "\"https://api.hit-pay.com\""
+            buildConfigField "String", "BASE_URL", baseUrl
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
