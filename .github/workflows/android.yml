@@ -324,22 +324,25 @@ jobs:
             - Version ${{ github.ref_name }}    
 
 
-      - name: Deplay to Stripe If needed
+      - name: Deploy to Stripe If needed
         if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_STRIPE_PATH != '' && env.DOWNLOAD_RELEASE_STRIPE_PATH != null
         run: |
-          echo "Deplay to Stripe If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"
+          echo "Deploy to Stripe If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"
           echo "Download path:${{ env.DOWNLOAD_RELEASE_STRIPE_PATH }}"
+
           
-      - name: Deplay to Adyen If needed
+          python3 scripts/stripe_uploader.py "$${{ env.DOWNLOAD_RELEASE_STRIPE_PATH }}" "${{ needs.prepare.outputs.environment }}" --push
+          
+      - name: Deploy to Adyen If needed
         if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH != '' && env.DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH != null
         run: |
-          echo "Deplay to Adyen If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"    
+          echo "Deploy to Adyen If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"    
           echo "Download path:${{ env.DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH }}"
 
-      - name: Deplay to Ingenico If needed
+      - name: Deploy to Ingenico If needed
         if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_INGENICO_PATH != '' && env.DOWNLOAD_RELEASE_INGENICO_PATH != null
         run: |
-          echo "Deplay to Ingenico If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }} - NOT SUPPORT YET!"    
+          echo "Deploy to Ingenico If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }} - NOT SUPPORT YET!"    
           echo "Download path:${{ env.DOWNLOAD_RELEASE_INGENICO_PATH }}" 
 
 
