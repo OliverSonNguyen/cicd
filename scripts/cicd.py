@@ -304,6 +304,7 @@ def main():
 
     
 
+# python3 scripts/cicd.py v5.5.5-555-stripe-stg-submit=true
 
 if __name__ == "__main__":
     main()
