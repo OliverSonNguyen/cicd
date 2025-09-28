@@ -222,8 +222,8 @@ class TagParse:
             adyenApkPath = adyenMatches[0]
             adyenApkName = os.path.basename(adyenApkPath)
             print(f"Found download adyen universal apk on tag: {self.tag} apk: {adyenApkPath} - name: {adyenApkName}")
-            self._write_env("DOWNLOAD_RELEASE_ADYEN_UNIVERSAL_PATH", adyenApkPath)
-            self._write_env("DOWNLOAD_RELEASE_ADYEN_UNIVERSAL", adyenApkName)
+            self._write_env("DOWNLOAD_RELEASE_ADYEN_PATH", adyenApkPath)
+            self._write_env("DOWNLOAD_RELEASE_ADYEN", adyenApkName)
         else:
             print(f"Not found download adyen universal apk on tag: {self.tag}")
 

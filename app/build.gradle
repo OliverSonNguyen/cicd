@@ -102,11 +102,21 @@ android {
             def versionName = variant.versionName
             def date = new Date().format('yyyyMMdd_HHmm')
             // get current git commit short hash
-            def gitSha = "git rev-parse --short HEAD".execute().text.trim()
+            def gitSha = "nogit"
+            try {
+                gitSha = "git rev-parse --short HEAD".execute(null, rootDir).text.trim()
+                if (!gitSha) gitSha = "nogit"
+            } catch (ignored) { }
 
             def abiFilter = output.getFilter(com.android.build.OutputFile.ABI) ?: "universal"
 
-            def apkName = "${buildType}_${flavorName}_${abiFilter}_${versionCode}_${versionName}_${gitSha}_${date}.apk"
+            // ---- ENV RULES ----
+            // debug => stg; release => from BASE_URL env var
+            def resolvedBaseUrl = System.getenv("BASE_URL") ?: "https://api.hit-pay.com"
+            def env = (buildType == "debug") ? "stg"
+                    : (resolvedBaseUrl.toLowerCase().contains("staging") ? "stg" : "prd")
+
+            def apkName = "${env}_${buildType}_${flavorName}_${abiFilter}_${versionCode}_${versionName}_${gitSha}_${date}.apk"
 
             outputFileName = apkName
         }
