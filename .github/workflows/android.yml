@@ -302,13 +302,8 @@ jobs:
             dist/**/*.apk
           fail_on_unmatched_files: false
       
-      - name: Deplay to Google Play If needed
-        if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH != '' && env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH != null
-        run: |
-          echo "Deplay to Google Play If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }}"
-          echo "Download path:${{ env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH }}"
       
-      - name: Deploy to Google Play Store (Draft)
+      - name: Deploy to Google Play Store (Draft) if Needed
         if: env.CI_SHOULD_SUBMIT == 'true' && env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH != '' && env.DOWNLOAD_RELEASE_FULL_UNIVERSAL_PATH != null
         uses: r0adkll/upload-google-play@v1.1.3
         with:
@@ -335,7 +330,7 @@ jobs:
           echo "Download path:${{ env.DOWNLOAD_RELEASE_STRIPE_PATH }}"
           echo "Env path:${{ needs.prepare.outputs.environment }}"
           echo "STRIPE_API_KEY:$STRIPE_API_KEY"
-                    
+
           python3 scripts/stripe_uploader.py "$${{ env.DOWNLOAD_RELEASE_STRIPE_PATH }}" "${{ needs.prepare.outputs.environment }}" --push
           
       - name: Deploy to Adyen If needed
@@ -349,6 +344,19 @@ jobs:
         run: |
           echo "Deploy to Ingenico If needed CI_SHOULD_SUBMIT:${{ env.CI_SHOULD_SUBMIT }} - NOT SUPPORT YET!"    
           echo "Download path:${{ env.DOWNLOAD_RELEASE_INGENICO_PATH }}" 
+
+      - name: Send to Slack
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          
+
+        run: |
+          echo "Send to Slack"
+          echo "SLACK_WEBHOOK:$SLACK_WEBHOOK - or ${{ env.SLACK_WEBHOOK }}"
+          python3 scripts/slack_release_notify.py ${{ github.ref_name }} \
+          --send
+
+          
 
 
     
