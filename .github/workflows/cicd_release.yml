@@ -1,0 +1,6 @@
+name: Android Release on Tag
+
+on:
+  push:
+    tags:
+      - 'v*'
