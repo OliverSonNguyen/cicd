@@ -3,6 +3,12 @@ from cicd import TagParse
 import os, sys, time, json, argparse, requests
 from datetime import datetime
 
+ENV_ALIASES = {
+    "prd": "production",
+    "production": "production",
+    "stg": "stg",
+    "staging": "stg",
+}
 SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK")
 class SlackReleaseNotify:
     def __init__(self, tag:str):
@@ -61,7 +67,8 @@ class SlackReleaseNotify:
         return True   
     
     def sendToSlack(self):
-        if self.environment == 'prd' or self.environment == 'production':
+        if ENV_ALIASES[self.environment] == 'production':
+            
             self.sendPrdBuildToSlack()
         else:
             self.sendStgBuildToSlack()    

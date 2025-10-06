@@ -10,7 +10,10 @@ allprojects {
         minSdkVersion = 26
         targetSdkVersion = 35
         //release version
-        versionCode = project.findProperty("versionCode")?.toInteger() ?: 666
-        versionName = project.findProperty("versionName") ?: '6.6.6'
+        localVersionCode = 777
+        localVersionName = '7.7.7'
+        //release version
+        versionCode = project.findProperty("versionCode")?.toInteger() ?: localVersionCode
+        versionName = project.findProperty("versionName") ?: localVersionName
     }
 }

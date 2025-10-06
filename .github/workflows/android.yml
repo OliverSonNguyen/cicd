@@ -78,10 +78,18 @@ jobs:
     needs: [ prepare ]
     name: "Build Release ${{ needs.prepare.outputs.versionCode }}-${{ needs.prepare.outputs.versionName }} on ${{ needs.prepare.outputs.environment }}"
     runs-on: ubuntu-latest
+    env:
+      GRADLE_OPTS: "-Xmx5g -XX:MaxMetaspaceSize=1g"
     environment: ${{ needs.prepare.outputs.environment }}
     
       
     steps:
+      - name: Check runner specs
+        run: |
+          echo "CPU cores: $(nproc)"
+          echo "Memory: $(free -h)"
+          echo "Disk: $(df -h)"
+          
       - name: Checkout Branch
         uses: actions/checkout@v4
         with:

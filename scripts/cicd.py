@@ -3,6 +3,12 @@ import json
 import sys
 import os
 import glob
+ENV_ALIASES = {
+    "prd": "production",
+    "production": "production",
+    "stg": "stg",
+    "staging": "stg",
+}
 class TagParse:
     def __init__(self, repoTag: str):
         """Init with a git tag"""
@@ -26,7 +32,7 @@ class TagParse:
         self.versionName = parts[0]
         self.versionCode = int(parts[1])
         self.flavor = parts[2] if len(parts) > 2 else 'full'
-        self.environment = parts[3] if len(parts) > 3 else 'stg'
+        self.environment = ENV_ALIASES[parts[3]] if len(parts) > 3 else ENV_ALIASES['stg']
         submitCmd = parts[4] if len(parts) > 4 else None
         self.shouldSubmit = self.shouldPushToStore(submitCmd=submitCmd)
 
