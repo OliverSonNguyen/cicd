@@ -22,6 +22,7 @@ class TagParse:
     def cleanTag(self, repoTag: str)-> str:
         return repoTag[1:] if repoTag.startswith("v") else repoTag   
 
+    #v5.5.5-555-stripe-stg-dosubmit-noqa
     def parseTag(self):
         print(f"do parseTag:{self.tag}")
         parts = self.tag.split("-")
@@ -33,8 +34,8 @@ class TagParse:
         self.versionCode = int(parts[1])
         self.flavor = parts[2] if len(parts) > 2 else 'full'
         self.environment = ENV_ALIASES[parts[3]] if len(parts) > 3 else ENV_ALIASES['stg']
-        submitCmd = parts[4] if len(parts) > 4 else None
-        self.shouldSubmit = self.shouldPushToStore(submitCmd=submitCmd)
+        self.shouldSubmit = self.shouldPushToStore()
+        self.shouldQA = self.shouldSendQaAndSlack()
 
 
     def getVersionName(self) -> str:
@@ -52,17 +53,29 @@ class TagParse:
     def getShouldSubmit(self) -> bool:
         return self.shouldSubmit
     
-    def shouldPushToStore(self, submitCmd : str) -> bool:
+   
+    def getShouldQa(self) -> bool:
+            return self.shouldQA
+    
+    def shouldPushToStore(self) -> bool:
         if self.flavor == "all":
          return False
-        if submitCmd == None:
+        if self.tag.__contains__("nosubmit"):
             return False
-        if submitCmd.__contains__("false"):
-            return False
-        if submitCmd.__contains__("submit=true"):
+        if self.tag.__contains__("dosubmit"):
             return True
         else:
             return False
+        
+        
+
+    def shouldSendQaAndSlack(self) -> bool:
+        if self.tag.__contains__("noqa"):
+            return False
+        if self.tag.__contains__("qa"):
+            return True
+        else:
+            return True    
         
     
     def _write_env(self, key: str, val: str):
@@ -85,6 +98,7 @@ class TagParse:
                 f.write(f"CI_FLAVOR={self.flavor}\n")
                 f.write(f"CI_ENVIRONMENT={self.environment}\n")
                 f.write(f"CI_SHOULD_SUBMIT={self.shouldSubmit}\n")
+                f.write(f"CI_SHOULD_QA={self.shouldQA}\n")
             print("GitHub environment variables set")
         else:
             print(" Not in GitHub Actions environment")

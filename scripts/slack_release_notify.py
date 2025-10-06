@@ -25,6 +25,7 @@ class SlackReleaseNotify:
         self.flavor = self.tag_parser.flavor
         self.environment = self.tag_parser.environment
         self.shouldSubmit = self.tag_parser.shouldSubmit
+        self.shouldQA = self.tag_parser.shouldQA
         self.displayVersion = f"v{self.versionCode}-{self.versionCode}"
 
         self.changelog = "n/a"
@@ -67,11 +68,8 @@ class SlackReleaseNotify:
         return True   
     
     def sendToSlack(self):
-        if ENV_ALIASES[self.environment] == 'production':
-            
-            self.sendPrdBuildToSlack()
-        else:
-            self.sendStgBuildToSlack()    
+        if self.shouldQA == True:
+            self.sendBuildToSlack()
 
     def get_built_apks_from_environment(self):
         """Get list of actually built APKs from environment variables"""
@@ -102,11 +100,7 @@ class SlackReleaseNotify:
 
     
 
-    def sendStgBuildToSlack(self):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
-        # print(f"webhook:{self.slackWebhook}")
-        # print(f"full:{self.full}")
-        # print(f"stripe:{self.stripe}")
+    def sendBuildToSlack(self):
         available_apks = self.get_built_apks_from_environment()
         message = {
         "text": f"🚀 HitPay Android {self.displayVersion} on {self.environment} is ready!",
@@ -115,14 +109,14 @@ class SlackReleaseNotify:
                     "type": "header",
                     "text": {
                         "type": "plain_text",
-                        "text": f"🚀 HitPay Android {self.displayVersion} Ready!"
+                        "text": f"🚀 HitPay Android {self.displayVersion} on {self.environment} is ready!"
                     }
                 },
                 {
                     "type": "section",
                     "fields": [
-                        {"type": "mrkdwn", "text": f"*Environment:* {self.environment}"},
                         {"type": "mrkdwn", "text": f"*Version:* {self.displayVersion}"},
+                        {"type": "mrkdwn", "text": f"*Environment:* {self.environment}"},
                         {"type": "mrkdwn", "text": f"*Submit:* {self.shouldSubmit}"}
                     ]
                 }, 
@@ -130,9 +124,8 @@ class SlackReleaseNotify:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": f"*📱 QA Team - APKs are ready for download and testing!*\n\n" +
-                                f"*Change logs {self.displayVersion}*\n" +
-                                f"{self.changelog}:\n\n"
+                        "text": f"*APKs are ready for download and testing!*\n\n" +
+
                                 f"*Available builds:*\n"
                                
                     }
@@ -141,7 +134,7 @@ class SlackReleaseNotify:
         }
          # APK display names mapping
         apk_display_names = {
-            "full": "📦 Normal Android",
+            "normal": "📦 Normal Android",
             "stripe": "🔷 Stripe Terminal",
             "adyen": "🟢 Adyen", 
             "ingenico": "🔶 Ingenico"
@@ -159,79 +152,7 @@ class SlackReleaseNotify:
                     "type": "button",
                     "text": {"type": "plain_text", "text": display_name},
                     "url": url,
-                    # "style": "primary" if apk_type == "full" else None
-                })
-            
-            # Add the download buttons to the message
-            message["blocks"].append({
-                "type": "actions",
-                "elements": download_elements
-            })
 
-
-        self.sendSlackWebhook(message)
-
-
-
-
-    def sendPrdBuildToSlack(self):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
-        print(f"webhook:{self.slackWebhook}")
-        print(f"full:{self.full}")
-        print(f"stripe:{self.stripe}")
-        available_apks = self.get_built_apks_from_environment()
-        message = {
-        "text": f"🚀 HitPay Android Release {selfdisplayVersion} on {self.environment} is ready!",
-        "blocks": [
-                {
-                    "type": "header",
-                    "text": {
-                        "type": "plain_text",
-                        "text": f"🚀 HitPay Android Release {selfdisplayVersion} on {self.environment} is ready!"
-                    }
-                },
-                {
-                    "type": "section",
-                    "fields": [
-                        {"type": "mrkdwn", "text": f"*Environment:* {self.environment}"},
-                        {"type": "mrkdwn", "text": f"*Version:* {self.displayVersion}"},
-                        {"type": "mrkdwn", "text": f"*Submit:* {self.shouldSubmit}"}
-                    ]
-                }, 
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"*📱 QA Team - APKs are ready for download and testing!*\n\n" +
-                                f"*Change logs {self.displayVersion}*\n" +
-                                f"{self.changelog}:\n\n"
-                                f"*Available builds:*\n"
-                               
-                    }
-                },
-            ]
-        }
-         # APK display names mapping
-        apk_display_names = {
-            "full": "📦 Normal Android",
-            "stripe": "🔷 Stripe Terminal",
-            "adyen": "🟢 Adyen", 
-            "ingenico": "🔶 Ingenico"
-        }
-        
-
-        if available_apks:
-            download_elements = []
-            
-            # Loop through the dictionary (apk_type: url)
-            for apk_type, url in available_apks.items():
-                display_name = apk_display_names.get(apk_type, apk_type.title())
-                
-                download_elements.append({
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": display_name},
-                    "url": url,
-                    # "style": "primary" if apk_type == "full" else None
                 })
             
             # Add the download buttons to the message

@@ -51,8 +51,8 @@ ENV_CONFIGS = {
 ENV_ALIASES = {
     "prd": "production",
     "production": "production",
-    "stg": "stg",
-    "staging": "stg",
+    "stg": "staging",
+    "staging": "staging",
 }
 
 class StripeUploadManager:
