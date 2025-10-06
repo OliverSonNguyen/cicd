@@ -6,8 +6,8 @@ from datetime import datetime
 ENV_ALIASES = {
     "prd": "production",
     "production": "production",
-    "stg": "stg",
-    "staging": "stg",
+    "stg": "staging",
+    "staging": "staging",
 }
 SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK")
 class SlackReleaseNotify:
