@@ -27,6 +27,7 @@ jobs:
       flavor: ${{ steps.parse.outputs.flavor }}
       environment: ${{ steps.parse.outputs.environment }}
       shouldSubmit: ${{ steps.parse.outputs.shouldSubmit  }}
+      shouldQA: ${{ steps.parse.outputs.shouldQA  }}
       gradleCommand: ${{ steps.parse.outputs.gradleCommand  }}
 
     steps:
@@ -62,14 +63,16 @@ jobs:
           echo "flavor=$CI_FLAVOR" >> $GITHUB_OUTPUT
           echo "environment=$CI_ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "shouldSubmit=$CI_SHOULD_SUBMIT" >> $GITHUB_OUTPUT
+          echo "shouldQA=$CI_SHOULD_QA" >> $GITHUB_OUTPUT
           echo "gradleCommand=$CI_GRADLE_COMMAND" >> $GITHUB_OUTPUT
           
-
+          
           echo "Version name:$CI_VERSION_NAME"
           echo "Version code:$CI_VERSION_CODE"
           echo "Flavor:$CI_FLAVOR"
           echo "Environment:$CI_ENVIRONMENT"
           echo "ShouldSubmit:$CI_SHOULD_SUBMIT"
+          echo "shouldQA:$CI_SHOULD_QA"
           echo "Gradlew cmd:${CI_GRADLE_COMMAND}"  
 
 
@@ -107,7 +110,8 @@ jobs:
           echo "CI_FLAVOR=${{ needs.prepare.outputs.flavor }}" >> $GITHUB_ENV
           echo "CI_ENVIRONMENT=${{ needs.prepare.outputs.environment }}" >> $GITHUB_ENV
           echo "CI_SHOULD_SUBMIT=${{ needs.prepare.outputs.shouldSubmit }}" >> $GITHUB_ENV
-          echo "CI_GRADLE_COMMAND=${{ needs.prepare.outputs.gradleCommand }}" >> $GITHUB_ENV     
+          echo "CI_SHOULD_QA=${{ needs.prepare.outputs.shouldQA }}" >> $GITHUB_ENV
+          echo "CI_GRADLE_COMMAND=${{ needs.prepare.outputs.gradleCommand }}" >> $GITHUB_ENV   
 
 
 
@@ -120,6 +124,7 @@ jobs:
           echo "Flavor: ${{ needs.prepare.outputs.flavor }}"
           echo "Environment: ${{ needs.prepare.outputs.environment }}"
           echo "ShouldSubmit: ${{ needs.prepare.outputs.shouldSubmit }}"
+          echo "ShouldQA: ${{ needs.prepare.outputs.shouldQA }}"
           echo "BASE_URL from GitHub environment: ${{ vars.BASE_URL }}"
           echo ""
           echo "Environment variables set:"
@@ -128,6 +133,7 @@ jobs:
           echo "CI_FLAVOR: $CI_FLAVOR"
           echo "CI_ENVIRONMENT: $CI_ENVIRONMENT"
           echo "CI_SHOULD_SUBMIT: $CI_SHOULD_SUBMIT"
+          echo "CI_SHOULD_QA: $CI_SHOULD_QA"
           echo "CI_GRADLE_COMMAND: $CI_GRADLE_COMMAND"
 
       - name: set up JDK 17
@@ -244,7 +250,7 @@ jobs:
     name: Push on ${{ needs.prepare.outputs.environment }}
     runs-on: ubuntu-latest
     environment: ${{ needs.prepare.outputs.environment }}
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') && needs.prepare.outputs.shouldQA == 'true'
     steps:
       - name: Checkout Branch
         uses: actions/checkout@v4
@@ -367,6 +373,7 @@ jobs:
 
 
       - name: Send to Slack
+        if: env.CI_SHOULD_QA == 'true'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           
